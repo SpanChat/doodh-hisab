@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Doodh Hisab</title>
+<style>
+  :root{
+    --bg:#FFF8EE;
+    --surface:#FFFFFF;
+    --ink:#2B2118;
+    --ink-soft:#8A7B68;
+    --indigo:#2C3E66;
+    --buffalo:#6B5B4D;
+    --buffalo-soft:#EFE7DE;
+    --cow:#C9821D;
+    --cow-soft:#FBEFDC;
+    --good:#3E7D52;
+    --good-soft:#E6F2E9;
+    --alert:#C0392B;
+    --alert-soft:#FBE6E3;
+    --radius:18px;
+    --radius-lg:26px;
+    --shadow:0 6px 20px rgba(43,33,24,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);overflow-x:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-bottom:90px;}
+  header.topbar{padding:26px 20px 14px;}
+  .date-label{font-size:14px;color:var(--ink-soft);font-weight:700;letter-spacing:0.3px;}
+  .app-title{font-size:23px;font-weight:800;margin-top:3px;}
+  .screen{display:none;padding:0 20px 20px;flex:1;}
+  .screen.active{display:block;}
+  .banner{background:var(--alert-soft);color:var(--alert);border-radius:var(--radius);
+    padding:16px 18px;font-weight:700;font-size:15px;margin-bottom:16px;}
+  .card{background:var(--surface);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .milk-row{display:flex;flex-direction:column;gap:12px;}
+  .milk-card{display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius);
+    padding:14px 18px;}
+  .milk-card.bhains{background:var(--buffalo-soft);}
+  .milk-card.gaay{background:var(--cow-soft);}
+  .milk-label{font-weight:800;font-size:16px;}
+  .milk-card.bhains .milk-label{color:var(--buffalo);}
+  .milk-card.gaay .milk-label{color:var(--cow);}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:12px;flex-shrink:0;}
+  .stepper button{width:42px;height:42px;border-radius:50%;border:none;font-size:22px;font-weight:800;
+    cursor:pointer;color:#fff;flex-shrink:0;}
+  .milk-card.bhains .stepper button{background:var(--buffalo);}
+  .milk-card.gaay .stepper button{background:var(--cow);}
+  .qty-display{font-size:20px;font-weight:800;min-width:50px;text-align:center;}
+  .no-delivery-btn{width:100%;margin-top:16px;padding:16px;border-radius:var(--radius);
+    border:2px solid #D8CCB8;background:transparent;color:var(--ink-soft);font-weight:700;
+    font-size:15px;cursor:pointer;}
+  .no-delivery-btn.active{background:var(--ink-soft);color:#fff;border-color:var(--ink-soft);}
+  .save-btn{width:100%;margin-top:12px;padding:18px;border-radius:var(--radius);border:none;
+    background:var(--indigo);color:#fff;font-weight:800;font-size:16px;cursor:pointer;}
+  .today-cost{text-align:center;margin-top:14px;font-size:15px;color:var(--ink-soft);font-weight:600;min-height:20px;}
+  .today-cost b{color:var(--ink);font-size:18px;}
+  .today-cost.pending{color:var(--alert);}
+  .due-card{text-align:center;}
+  .due-label{font-size:14px;color:var(--ink-soft);font-weight:700;}
+  .due-amount{font-size:50px;font-weight:800;color:var(--indigo);margin:6px 0 2px;}
+  .due-amount.credit{color:var(--good);}
+  .due-status{font-size:14px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+  .due-status.credit{color:var(--good);}
+  .btn-primary{width:100%;padding:18px;border-radius:var(--radius);border:none;
+    background:var(--indigo);color:#fff;font-weight:800;font-size:16px;cursor:pointer;margin-top:6px;}
+  .last-payment{font-size:13px;color:var(--ink-soft);margin-top:14px;}
+  .section-label{font-weight:800;font-size:16px;margin:22px 0 10px;}
+  .history-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface);
+    border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow);}
+  .history-date{font-weight:700;font-size:14px;}
+  .history-detail{font-size:13px;color:var(--ink-soft);margin-top:2px;}
+  .badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;}
+  .badge.delivered{background:var(--good-soft);color:var(--good);}
+  .badge.notdelivered{background:#EFEFEF;color:var(--ink-soft);}
+  .badge.pending{background:var(--alert-soft);color:var(--alert);}
+  .settings-field{margin-bottom:18px;}
+  .settings-field label{display:block;font-weight:700;font-size:14px;margin-bottom:8px;}
+  .rate-input{display:flex;align-items:center;background:var(--bg);border-radius:14px;padding:10px 16px;
+    border:2px solid #ECE2CE;}
+  .rate-input span{font-weight:800;font-size:18px;margin-right:6px;}
+  .rate-input input{border:none;outline:none;font-size:18px;font-weight:700;width:100%;
+    background:transparent;color:var(--ink);}
+  .btn-secondary{width:100%;padding:16px;border-radius:var(--radius);border:2px solid var(--indigo);
+    background:transparent;color:var(--indigo);font-weight:800;font-size:15px;cursor:pointer;
+    text-align:center;display:block;margin-top:10px;}
+  .hint{font-size:12.5px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+  .tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+    box-shadow:0 -4px 16px rgba(0,0,0,0.06);display:flex;max-width:480px;margin:0 auto;}
+  .tab-btn{flex:1;border:none;background:transparent;padding:12px 0 10px;display:flex;
+    flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700;
+    color:var(--ink-soft);cursor:pointer;}
+  .tab-btn.active{color:var(--indigo);}
+  .tab-icon{font-size:22px;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;
+    align-items:flex-end;justify-content:center;z-index:50;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--bg);width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:24px 20px 32px;}
+  .modal h3{margin:0 0 18px;font-size:19px;font-weight:800;}
+  .modal-field{margin-bottom:16px;}
+  .modal-field label{display:block;font-weight:700;font-size:14px;margin-bottom:8px;}
+  .modal-field input{width:100%;padding:14px 16px;border-radius:14px;border:2px solid #E4DCCB;
+    font-size:17px;font-weight:700;background:var(--surface);color:var(--ink);}
+  .modal-actions{display:flex;gap:10px;margin-top:6px;}
+  .modal-actions button{flex:1;}
+  .btn-text{background:transparent;border:none;color:var(--ink-soft);font-weight:700;
+    padding:14px;font-size:15px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="date-label" id="todayLabel"></div>
+    <div class="app-title">🥛 Doodh Hisab</div>
+  </header>
+
+  <main class="screen active" id="screen-aaj">
+    <div id="aajBanner"></div>
+    <div class="card">
+      <div class="milk-row">
+        <div class="milk-card bhains">
+          <div class="milk-label">🐃 Bhains</div>
+          <div class="stepper">
+            <button onclick="adjustToday('bhains',-0.5)">−</button>
+            <div class="qty-display" id="bhainsQty">0 L</div>
+            <button onclick="adjustToday('bhains',0.5)">+</button>
+          </div>
+        </div>
+        <div class="milk-card gaay">
+          <div class="milk-label">🐄 Gaay</div>
+          <div class="stepper">
+            <button onclick="adjustToday('gaay',-0.5)">−</button>
+            <div class="qty-display" id="gaayQty">0 L</div>
+            <button onclick="adjustToday('gaay',0.5)">+</button>
+          </div>
+        </div>
+      </div>
+      <button class="no-delivery-btn" id="noDeliveryBtn" onclick="toggleNoDelivery()">Aaj Doodh Nahi Aaya</button>
+      <button class="save-btn" onclick="saveToday()">Save Karein</button>
+      <div class="today-cost" id="todayCost"></div>
+    </div>
+    <div class="section-label">Pichle Din</div>
+    <div id="historyList"></div>
+  </main>
+
+  <main class="screen" id="screen-hisab">
+    <div class="card due-card">
+      <div class="due-label">ABHI KITNA DENA HAI</div>
+      <div class="due-amount" id="dueAmount">₹0</div>
+      <div class="due-status" id="dueStatus"></div>
+      <button class="btn-primary" onclick="openPaymentModal()">Payment Kiya</button>
+      <div class="last-payment" id="lastPaymentLine"></div>
+    </div>
+    <div class="section-label">Pichle Payments</div>
+    <div id="paymentsList"></div>
+  </main>
+
+  <main class="screen" id="screen-settings">
+    <div class="card">
+      <div class="settings-field">
+        <label>🐃 Bhains ka Rate (₹ per Litre)</label>
+        <div class="rate-input"><span>₹</span><input type="number" id="bhainsRateInput" inputmode="decimal"></div>
+      </div>
+      <div class="settings-field">
+        <label>🐄 Gaay ka Rate (₹ per Litre)</label>
+        <div class="rate-input"><span>₹</span><input type="number" id="gaayRateInput" inputmode="decimal"></div>
+      </div>
+      <button class="btn-primary" onclick="updateRates()">Rate Update Karein</button>
+      <div class="hint">Naya rate sirf aaj se aage ke din par lagega. Purane din ka hisab nahi badlega.</div>
+    </div>
+
+    <div class="card">
+      <div class="section-label" style="margin-top:0;">☁️ Cloud Backup</div>
+      <div class="hint" id="cloudStatusLine">Check ho raha hai...</div>
+      <button class="btn-secondary" onclick="syncToCloud(true)">Ab Sync Karein</button>
+      <button class="btn-secondary" onclick="restoreFromCloud()">Cloud Se Restore Karein</button>
+      <div class="hint">Yeh asli safety net hai — har Save ke baad data apne aap Google Sheet mein bhi chala jaata hai.</div>
+    </div>
+
+    <div class="card">
+      <button class="btn-secondary" onclick="downloadBackup()" style="margin-top:0;">⬇️ Backup Lein (Phone Par)</button>
+      <label class="btn-secondary">
+        ⬆️ Backup Wapas Lao (Phone Se)
+        <input type="file" accept="application/json" style="display:none" onchange="restoreBackup(event)">
+      </label>
+      <div class="hint">Yeh ek extra, manual copy hai. Cloud Backup hi mukhya safety hai.</div>
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" id="tabBtn-aaj" onclick="showScreen('aaj')"><span class="tab-icon">📅</span>Aaj</button>
+    <button class="tab-btn" id="tabBtn-hisab" onclick="showScreen('hisab')"><span class="tab-icon">💰</span>Hisab</button>
+    <button class="tab-btn" id="tabBtn-settings" onclick="showScreen('settings')"><span class="tab-icon">⚙️</span>Settings</button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <h3 id="paymentModalTitle">Payment Kiya</h3>
+    <div class="modal-field">
+      <label>Kitna Diya (₹)</label>
+      <input type="number" id="paymentAmount" inputmode="decimal">
+    </div>
+    <div class="modal-field">
+      <label>Kab Diya</label>
+      <input type="date" id="paymentDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-text" id="paymentDeleteBtn" style="display:none;color:var(--alert);" onclick="deletePayment()">Delete Karein</button>
+      <button class="btn-text" onclick="closeModal('paymentModal')">Cancel</button>
+    </div>
+    <button class="btn-primary" onclick="savePayment()">Save Karein</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="dayModal">
+  <div class="modal">
+    <h3 id="dayModalTitle"></h3>
+    <div class="milk-row">
+      <div class="milk-card bhains">
+        <div class="milk-label">🐃 Bhains</div>
+        <div class="stepper">
+          <button onclick="adjustEdit('bhains',-0.5)">−</button>
+          <div class="qty-display" id="editBhainsQty">0 L</div>
+          <button onclick="adjustEdit('bhains',0.5)">+</button>
+        </div>
+      </div>
+      <div class="milk-card gaay">
+        <div class="milk-label">🐄 Gaay</div>
+        <div class="stepper">
+          <button onclick="adjustEdit('gaay',-0.5)">−</button>
+          <div class="qty-display" id="editGaayQty">0 L</div>
+          <button onclick="adjustEdit('gaay',0.5)">+</button>
+        </div>
+      </div>
+    </div>
+    <button class="no-delivery-btn" id="editNoDeliveryBtn" onclick="toggleEditNoDelivery()">Is Din Doodh Nahi Aaya</button>
+    <div class="modal-actions">
+      <button class="btn-text" onclick="clearDay()">Clear Karein</button>
+      <button class="btn-text" onclick="closeModal('dayModal')">Cancel</button>
+    </div>
+    <button class="btn-primary" onclick="saveDayEdit()">Save Karein</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CLOUD BACKUP CONFIG — fill these in after deploying the Apps Script.
+   See doodh-hisab-cloud-backend.gs for the matching server-side code.
+   ===================================================================== */
+const CLOUD_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxztNshrRYzadADGJZwBWKgWSX1_3i3gcGzTBxqXqdI6EU0jdU0dVnDGGU1bejNn3Au9A/exec';
+const CLOUD_SYNC_TOKEN = 'DOODH';
+/* ===================================================================== */
+
+const KEYS = { entries:'doodh_entries', rates:'doodh_rates', payments:'doodh_payments' };
+let editingDate = null;
+let todayDraft = { bhains:0, gaay:0, delivered:null };
+let todayDirty = false;
+let todayDraftDate = null;
+let dayDraft = { bhains:0, gaay:0, delivered:null };
+let paymentEditIndex = null;
+let paymentSaveLock = false;
+const cloudConfigured = CLOUD_SYNC_URL.length > 5 && CLOUD_SYNC_TOKEN.length > 0;
+
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function loadEntries(){ try{ return JSON.parse(localStorage.getItem(KEYS.entries)) || {}; }catch(e){ return {}; } }
+function saveEntries(e){ localStorage.setItem(KEYS.entries, JSON.stringify(e)); }
+
+function loadRates(){
+  try{
+    const r = JSON.parse(localStorage.getItem(KEYS.rates));
+    if(r && r.length) return r;
+  }catch(e){}
+  const seed = [{ from:'2000-01-01', bhains:60, gaay:55 }];
+  localStorage.setItem(KEYS.rates, JSON.stringify(seed));
+  return seed;
+}
+function saveRates(r){ localStorage.setItem(KEYS.rates, JSON.stringify(r)); }
+
+function loadPayments(){ try{ return JSON.parse(localStorage.getItem(KEYS.payments)) || []; }catch(e){ return []; } }
+function savePayments(p){ localStorage.setItem(KEYS.payments, JSON.stringify(p)); }
+
+function getRateForDate(dateStr){
+  const rates = loadRates().slice().sort((a,b)=>a.from.localeCompare(b.from));
+  let chosen = rates[0];
+  for(const r of rates){ if(r.from <= dateStr) chosen = r; else break; }
+  return chosen;
+}
+
+function computeCost(bhains, gaay, rate){
+  return Math.round((bhains*rate.bhains + gaay*rate.gaay) * 100) / 100;
+}
+
+function getEntry(dateStr){
+  const entries = loadEntries();
+  return entries[dateStr] || { delivered:null, bhains:0, gaay:0, cost:0 };
+}
+function setEntry(dateStr, entry){
+  const entries = loadEntries();
+  entries[dateStr] = entry;
+  saveEntries(entries);
+}
+
+function totalDue(){
+  const entries = loadEntries();
+  let totalCost = 0;
+  for(const d in entries){ if(entries[d].delivered) totalCost += entries[d].cost; }
+  const payments = loadPayments();
+  let totalPaid = 0;
+  for(const p of payments) totalPaid += p.amount;
+  return Math.round((totalCost - totalPaid) * 100) / 100;
+}
+
+function formatL(n){
+  n = Math.round(n*10)/10;
+  return (n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)) + ' L';
+}
+function formatDateDisplay(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+}
+function formatDateFull(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+/* ---------- AAJ SCREEN (explicit save, day-rollover safe) ---------- */
+function initTodayDraft(){
+  const ds = todayISO();
+  const e = getEntry(ds);
+  todayDraft = { bhains: e.bhains||0, gaay: e.gaay||0, delivered: (e.delivered===true || e.delivered===false) ? e.delivered : null };
+  todayDirty = false;
+  todayDraftDate = ds;
+}
+
+function adjustToday(type, delta){
+  if(todayDraft.delivered === false) todayDraft = { bhains:0, gaay:0, delivered:null };
+  if(type === 'bhains') todayDraft.bhains = Math.max(0, todayDraft.bhains + delta);
+  else todayDraft.gaay = Math.max(0, todayDraft.gaay + delta);
+  todayDirty = true;
+  renderAaj();
+}
+
+function toggleNoDelivery(){
+  const ds = todayISO();
+  if(todayDraft.delivered === false){
+    const entries = loadEntries(); delete entries[ds]; saveEntries(entries);
+    todayDraft = { bhains:0, gaay:0, delivered:null };
+  } else {
+    setEntry(ds, { delivered:false, bhains:0, gaay:0, cost:0 });
+    todayDraft = { bhains:0, gaay:0, delivered:false };
+  }
+  todayDirty = false;
+  renderAaj();
+  renderHisab();
+  syncToCloud();
+}
+
+function saveToday(){
+  if(todayDraft.delivered === false) return;
+  if((todayDraft.bhains + todayDraft.gaay) <= 0){
+    alert('Pehle Bhains ya Gaay ki quantity select karein');
+    return;
+  }
+  const ds = todayISO();
+  const rate = getRateForDate(ds);
+  const cost = computeCost(todayDraft.bhains, todayDraft.gaay, rate);
+  setEntry(ds, { delivered:true, bhains:todayDraft.bhains, gaay:todayDraft.gaay, cost, rateUsed:rate });
+  todayDirty = false;
+  renderAaj();
+  renderHisab();
+  syncToCloud();
+}
+
+function renderAaj(){
+  // Guard against the date silently rolling over while the tab stayed open
+  if(todayDraftDate !== todayISO()) initTodayDraft();
+
+  document.getElementById('todayLabel').textContent =
+    new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('bhainsQty').textContent = formatL(todayDraft.bhains);
+  document.getElementById('gaayQty').textContent = formatL(todayDraft.gaay);
+  document.getElementById('noDeliveryBtn').classList.toggle('active', todayDraft.delivered === false);
+
+  const costEl = document.getElementById('todayCost');
+  costEl.classList.remove('pending');
+  if(todayDraft.delivered === false){
+    costEl.innerHTML = 'Aaj doodh nahi aaya';
+  } else if(todayDirty){
+    const rate = getRateForDate(todayISO());
+    const previewCost = computeCost(todayDraft.bhains, todayDraft.gaay, rate);
+    costEl.classList.add('pending');
+    costEl.innerHTML = 'Lagbhag ₹'+previewCost.toLocaleString('en-IN')+' — Save Karein dabayein';
+  } else if(todayDraft.delivered === true){
+    costEl.innerHTML = 'Aaj ka kharcha: <b>₹'+getEntry(todayISO()).cost.toLocaleString('en-IN')+'</b> ✓';
+  } else {
+    costEl.innerHTML = '';
+  }
+  renderBanner();
+  renderDayHistoryList();
+}
+
+function isSyncStale(){
+  if(!cloudConfigured) return false;
+  const last = localStorage.getItem('doodh_last_synced');
+  if(!last) return true;
+  const hoursSince = (Date.now() - new Date(last).getTime()) / (1000*60*60);
+  return hoursSince > 48;
+}
+
+function renderBanner(){
+  const banner = document.getElementById('aajBanner');
+  const due = totalDue();
+  const now = new Date();
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+  const isLastDayOfMonth = tomorrow.getDate() === 1;
+  let html = '';
+  if(isLastDayOfMonth && due > 0){
+    html += '<div class="banner">⏰ Kal milkman ko ₹'+due.toLocaleString('en-IN')+' dena hai</div>';
+  }
+  if(isSyncStale()){
+    html += '<div class="banner" style="background:var(--cow-soft);color:var(--buffalo);">⚠️ Cloud backup 2+ din se nahi hua hai — internet check karein</div>';
+  }
+  banner.innerHTML = html;
+}
+
+function renderDayHistoryList(){
+  const list = document.getElementById('historyList');
+  const entries = loadEntries();
+  const today = new Date();
+  list.innerHTML = '';
+  for(let i=0; i<60; i++){
+    const d = new Date(today); d.setDate(today.getDate()-i);
+    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const entry = entries[ds];
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.onclick = () => openDayModal(ds);
+    let badgeHtml, detailHtml;
+    if(!entry || entry.delivered === null || entry.delivered === undefined){
+      badgeHtml = '<span class="badge pending">Bharna Baki</span>';
+      detailHtml = 'Abhi tak nahi bhara';
+    } else if(entry.delivered === false){
+      badgeHtml = '<span class="badge notdelivered">Nahi Aaya</span>';
+      detailHtml = '—';
+    } else {
+      badgeHtml = '<span class="badge delivered">₹'+entry.cost.toLocaleString('en-IN')+'</span>';
+      const parts = [];
+      if(entry.bhains > 0) parts.push('Bhains '+formatL(entry.bhains));
+      if(entry.gaay > 0) parts.push('Gaay '+formatL(entry.gaay));
+      detailHtml = parts.join(' + ');
+    }
+    div.innerHTML = '<div><div class="history-date">'+formatDateDisplay(ds)+'</div>'+
+      '<div class="history-detail">'+detailHtml+'</div></div>'+badgeHtml;
+    list.appendChild(div);
+  }
+}
+
+/* ---------- DAY EDIT MODAL ---------- */
+function openDayModal(ds){
+  editingDate = ds;
+  const e = getEntry(ds);
+  dayDraft = { bhains: e.bhains||0, gaay: e.gaay||0, delivered: (e.delivered===true || e.delivered===false) ? e.delivered : null };
+  document.getElementById('dayModalTitle').textContent = formatDateDisplay(ds)+' ka Hisab';
+  renderDayModalFields();
+  document.getElementById('dayModal').classList.add('active');
+}
+
+function renderDayModalFields(){
+  document.getElementById('editBhainsQty').textContent = formatL(dayDraft.bhains);
+  document.getElementById('editGaayQty').textContent = formatL(dayDraft.gaay);
+  document.getElementById('editNoDeliveryBtn').classList.toggle('active', dayDraft.delivered === false);
+}
+
+function adjustEdit(type, delta){
+  if(dayDraft.delivered === false) dayDraft = { bhains:0, gaay:0, delivered:null };
+  if(type === 'bhains') dayDraft.bhains = Math.max(0, dayDraft.bhains + delta);
+  else dayDraft.gaay = Math.max(0, dayDraft.gaay + delta);
+  if(dayDraft.bhains + dayDraft.gaay > 0) dayDraft.delivered = true;
+  renderDayModalFields();
+}
+
+function toggleEditNoDelivery(){
+  if(dayDraft.delivered === false) dayDraft = { bhains:0, gaay:0, delivered:null };
+  else dayDraft = { bhains:0, gaay:0, delivered:false };
+  renderDayModalFields();
+}
+
+function saveDayEdit(){
+  if(dayDraft.delivered === true){
+    const rate = getRateForDate(editingDate);
+    const cost = computeCost(dayDraft.bhains, dayDraft.gaay, rate);
+    setEntry(editingDate, { delivered:true, bhains:dayDraft.bhains, gaay:dayDraft.gaay, cost, rateUsed:rate });
+  } else if(dayDraft.delivered === false){
+    setEntry(editingDate, { delivered:false, bhains:0, gaay:0, cost:0 });
+  }
+  closeModal('dayModal');
+  renderHisab();
+  if(editingDate === todayISO()) initTodayDraft();
+  renderAaj();
+  syncToCloud();
+}
+
+function clearDay(){
+  if(!confirm('Yeh din ka entry delete karna hai?')) return;
+  const entries = loadEntries();
+  delete entries[editingDate];
+  saveEntries(entries);
+  closeModal('dayModal');
+  renderHisab();
+  if(editingDate === todayISO()) initTodayDraft();
+  renderAaj();
+  syncToCloud();
+}
+
+/* ---------- HISAB SCREEN ---------- */
+function renderHisab(){
+  const due = totalDue();
+  const dueEl = document.getElementById('dueAmount');
+  const statusEl = document.getElementById('dueStatus');
+  if(due < 0){
+    dueEl.textContent = '₹'+Math.abs(due).toLocaleString('en-IN');
+    dueEl.classList.add('credit');
+    statusEl.textContent = 'Aapka Advance Hai';
+    statusEl.classList.add('credit');
+  } else {
+    dueEl.textContent = '₹'+due.toLocaleString('en-IN');
+    dueEl.classList.remove('credit');
+    statusEl.textContent = due === 0 ? 'Koi Due Nahi' : 'Milkman Ko Dena Hai';
+    statusEl.classList.remove('credit');
+  }
+
+  const payments = loadPayments();
+  const lastPayLine = document.getElementById('lastPaymentLine');
+  if(payments.length){
+    const last = payments.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+    lastPayLine.textContent = 'Pichla payment: ₹'+last.amount.toLocaleString('en-IN')+' ('+formatDateFull(last.date)+')';
+  } else {
+    lastPayLine.textContent = 'Abhi tak koi payment record nahi hai';
+  }
+  renderPaymentsList();
+}
+
+function renderPaymentsList(){
+  const list = document.getElementById('paymentsList');
+  const payments = loadPayments();
+  list.innerHTML = '';
+  if(!payments.length){
+    list.innerHTML = '<div class="hint">Abhi tak koi payment record nahi hai. Upar "Payment Kiya" dabakar add karein.</div>';
+    return;
+  }
+  const sorted = payments.map((p,i)=>Object.assign({idx:i}, p)).sort((a,b)=> b.date.localeCompare(a.date));
+  for(const p of sorted){
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.onclick = () => openPaymentEditModal(p.idx);
+    div.innerHTML = '<div><div class="history-date">'+formatDateFull(p.date)+'</div></div>'+
+      '<span class="badge delivered">₹'+p.amount.toLocaleString('en-IN')+'</span>';
+    list.appendChild(div);
+  }
+}
+
+/* ---------- PAYMENT MODAL (add + edit + delete, double-tap safe) ---------- */
+function openPaymentModal(){
+  paymentEditIndex = null;
+  document.getElementById('paymentModalTitle').textContent = 'Payment Kiya';
+  document.getElementById('paymentDeleteBtn').style.display = 'none';
+  const due = totalDue();
+  document.getElementById('paymentAmount').value = due > 0 ? due : '';
+  document.getElementById('paymentDate').value = todayISO();
+  document.getElementById('paymentModal').classList.add('active');
+}
+
+function openPaymentEditModal(idx){
+  paymentEditIndex = idx;
+  const p = loadPayments()[idx];
+  document.getElementById('paymentModalTitle').textContent = 'Payment Edit Karein';
+  document.getElementById('paymentDeleteBtn').style.display = 'block';
+  document.getElementById('paymentAmount').value = p.amount;
+  document.getElementById('paymentDate').value = p.date;
+  document.getElementById('paymentModal').classList.add('active');
+}
+
+function savePayment(){
+  if(paymentSaveLock) return;
+  const amount = parseFloat(document.getElementById('paymentAmount').value);
+  const date = document.getElementById('paymentDate').value;
+  if(!amount || amount <= 0 || !date){ alert('Sahi amount aur date dalein'); return; }
+  paymentSaveLock = true;
+  const payments = loadPayments();
+  if(paymentEditIndex === null) payments.push({ date, amount });
+  else payments[paymentEditIndex] = { date, amount };
+  savePayments(payments);
+  closeModal('paymentModal');
+  renderHisab();
+  syncToCloud();
+  setTimeout(()=>{ paymentSaveLock = false; }, 600);
+}
+
+function deletePayment(){
+  if(paymentEditIndex === null) return;
+  if(!confirm('Yeh payment delete karna hai?')) return;
+  const payments = loadPayments();
+  payments.splice(paymentEditIndex, 1);
+  savePayments(payments);
+  closeModal('paymentModal');
+  renderHisab();
+  syncToCloud();
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+/* ---------- SETTINGS ---------- */
+function renderSettings(){
+  const rates = loadRates().slice().sort((a,b)=>a.from.localeCompare(b.from));
+  const current = rates[rates.length-1];
+  document.getElementById('bhainsRateInput').value = current.bhains;
+  document.getElementById('gaayRateInput').value = current.gaay;
+  renderCloudStatus();
+}
+function updateRates(){
+  const bhains = parseFloat(document.getElementById('bhainsRateInput').value);
+  const gaay = parseFloat(document.getElementById('gaayRateInput').value);
+  if(isNaN(bhains) || isNaN(gaay) || bhains < 0 || gaay < 0){ alert('Sahi rate dalein'); return; }
+  const rates = loadRates();
+  const ds = todayISO();
+  const filtered = rates.filter(r => r.from !== ds);
+  filtered.push({ from: ds, bhains, gaay });
+  saveRates(filtered);
+  alert('Rate update ho gaya — aaj se laagu hoga');
+  syncToCloud();
+}
+
+function downloadBackup(){
+  const data = { entries: loadEntries(), rates: loadRates(), payments: loadPayments(), exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'doodh-hisab-backup-'+todayISO()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function restoreBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!confirm('Purana data delete hoke yeh backup load hoga. Pakka karna hai?')) return;
+      saveEntries(data.entries || {});
+      saveRates(data.rates || loadRates());
+      savePayments(data.payments || []);
+      alert('Backup load ho gaya');
+      initTodayDraft(); renderAaj(); renderHisab(); renderSettings();
+      syncToCloud();
+    }catch(err){ alert('Yeh file sahi nahi hai'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* ---------- CLOUD SYNC (Google Sheet via Apps Script) ---------- */
+function buildSnapshot(){
+  return { entries: loadEntries(), rates: loadRates(), payments: loadPayments() };
+}
+
+async function syncToCloud(manual){
+  if(!cloudConfigured){
+    if(manual) alert('Pehle Cloud Backup set up karein — Settings mein neeche steps dekhein.');
+    renderCloudStatus();
+    return;
+  }
+  renderCloudStatus('syncing');
+  try{
+    const res = await fetch(CLOUD_SYNC_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({ token: CLOUD_SYNC_TOKEN, data: buildSnapshot() })
+    });
+    const result = await res.json();
+    if(result && result.ok){
+      localStorage.setItem('doodh_last_synced', new Date().toISOString());
+      renderCloudStatus('ok');
+      if(manual) alert('Cloud par save ho gaya ✓');
+    } else {
+      renderCloudStatus('error');
+      if(manual) alert('Sync nahi ho paya: ' + (result && result.error ? result.error : 'token ya URL check karein'));
+    }
+  }catch(err){
+    renderCloudStatus('error');
+    if(manual) alert('Sync nahi ho paya — internet check karein');
+  }
+}
+
+async function restoreFromCloud(){
+  if(!cloudConfigured){ alert('Pehle Cloud Backup set up karein — Settings mein neeche steps dekhein.'); return; }
+  try{
+    const res = await fetch(CLOUD_SYNC_URL + '?token=' + encodeURIComponent(CLOUD_SYNC_TOKEN));
+    const result = await res.json();
+    if(!result || !result.ok){ alert('Cloud se backup nahi mila: ' + (result && result.error ? result.error : 'kuch galat hua')); return; }
+    const savedAt = new Date(result.savedAt).toLocaleString('en-IN');
+    if(!confirm('Cloud par yeh backup hai: '+savedAt+'\nIska data load karein? Is phone ka current data overwrite ho jayega.')) return;
+    saveEntries(result.data.entries || {});
+    saveRates(result.data.rates || loadRates());
+    savePayments(result.data.payments || []);
+    initTodayDraft();
+    renderAaj(); renderHisab(); renderSettings();
+    alert('Cloud se data load ho gaya ✓');
+  }catch(err){
+    alert('Cloud se connect nahi ho paya — internet check karein');
+  }
+}
+
+function renderCloudStatus(state){
+  const el = document.getElementById('cloudStatusLine');
+  if(!el) return;
+  if(!cloudConfigured){
+    el.textContent = 'Cloud Backup set up nahi hua hai. doodh-hisab-cloud-backend.gs file ki steps follow karein.';
+    return;
+  }
+  const last = localStorage.getItem('doodh_last_synced');
+  const lastText = last ? new Date(last).toLocaleString('en-IN') : 'Kabhi nahi';
+  if(state === 'syncing') el.textContent = 'Sync ho raha hai...';
+  else if(state === 'error') el.textContent = 'Aakhri safal sync: ' + lastText + ' — abhi sync fail hua, dobara try hoga';
+  else el.textContent = 'Aakhri safal sync: ' + lastText;
+}
+
+/* ---------- TABS ---------- */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('tabBtn-'+name).classList.add('active');
+  if(name === 'hisab') renderHisab();
+  if(name === 'settings') renderSettings();
+  if(name === 'aaj') renderAaj();
+}
+
+/* Retry a failed sync automatically when the app regains focus/visibility */
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) syncToCloud();
+});
+
+/* ---------- INIT ---------- */
+initTodayDraft();
+renderAaj();
+renderHisab();
+renderSettings();
+syncToCloud();
+</script>
+</body>
+</html>
